@@ -56,29 +56,36 @@ def scan(
     while has_pages:
         page = next(paged_packages)
         for package in page:
-            package_id = int(package['id'])
+            package_id = int(package["id"])
             if package_id in seen_packages:
                 has_pages = False
                 continue
 
             seen_packages.append(package_id)
-            owner = package['owner']['login']
-            owner_url = package['owner']['html_url']
-            image_name = package['name']
-            repo_url = package['repository']['html_url']
-            repo_name = package['repository']['name']
+            owner = package["owner"]["login"]
+            owner_url = package["owner"]["html_url"]
+            image_name = package["name"]
+            repo_url = package["repository"]["html_url"]
+            repo_name = package["repository"]["name"]
             repo_details = gh.repos.get(owner=owner, repo=repo_name)
-            repo_description = repo_details['description']
-            stars = repo_details['stargazers_count']
-            forks = repo_details['forks']
-            updated_at = arrow.get(repo_details['updated_at'])
+            repo_description = repo_details["description"]
+            stars = repo_details["stargazers_count"]
+            forks = repo_details["forks"]
+            updated_at = arrow.get(repo_details["updated_at"])
 
-            if settings and len(settings['ignores']) > 0:
-                if image_name in settings['ignores']:
+            if settings and len(settings["ignores"]) > 0:
+                if image_name in settings["ignores"]:
                     continue
 
             rows.append(
-                (image_name, repo_description, str(stars), str(forks), updated_at.humanize(), repo_url)
+                (
+                    image_name,
+                    repo_description,
+                    str(stars),
+                    str(forks),
+                    updated_at.humanize(),
+                    repo_url,
+                )
             )
 
     sorted_rows = sorted(rows, key=lambda tup: tup[0])
