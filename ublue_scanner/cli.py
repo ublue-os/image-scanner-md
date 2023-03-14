@@ -1,5 +1,6 @@
 import typer
 import arrow
+import re
 from enum import Enum
 from dotenv import load_dotenv
 from ghapi.all import GhApi
@@ -8,15 +9,39 @@ from ghapi.page import paged
 from rich.table import Table
 from rich.console import Console
 from ruamel.yaml import YAML
+from textwrap import dedent, indent
+
+from ublue_scanner.container import RegistryV2Image
+
 yaml = YAML()
 
 
 app = typer.Typer()
 load_dotenv()
 
+
 class OutputOptions(str, Enum):
     cli = "cli"
     markdown = "md"
+    badge = "badge"
+
+
+def filter_tags(tags: list[str], include: list[str] = None, exclude: list[str] = None):
+    def included(item):
+        if not include:
+            return True
+        return any([re.search(i, item) for i in include])
+
+    def excluded(item):
+        if not excluded:
+            return True
+        return any([re.search(i, item) for i in exclude]) is False
+
+    t = filter(included, tags)
+    t = filter(excluded, t)
+
+    return list(t)
+
 
 @app.command()
 def scan(
@@ -118,6 +143,43 @@ def scan(
 *Last Updated*: {updated_at}  
 [Repo]({url})
 """
+            typer.echo(content)
+    elif output == OutputOptions.badge:
+        for row in sorted_rows:
+            image_name = row[0]
+            stars = row[2]
+            forks = row[3]
+            updated_at = row[4]
+            url = row[5]
+            r = RegistryV2Image(f"ghcr.io/{org}/{image_name}")
+            try:
+                meta = r.meta()
+            except:
+                continue
+
+            if settings and "filters" in settings:
+                if "tags" in settings["filters"]:
+                    meta.tags = filter_tags(meta.tags, **settings["filters"]["tags"])
+
+            content = dedent(
+                f"""
+            !!! abstract "{meta.title}"
+                {meta.description}
+            """
+            )
+
+            for tag in meta.tags:
+                content = content + indent(
+                    dedent(
+                        f"""
+                    === "{tag}"
+                        ```sh
+                        rpm-ostree rebase ostree-unverified-registry:ghcr.io/{org}/{image_name}:{tag}
+                        ```
+                """
+                    ),
+                    "    ",
+                )
             typer.echo(content)
     else:
         typer.echo("Sorry, don't understand output option")
