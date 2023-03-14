@@ -112,10 +112,10 @@ def scan(
             url = row[5]
             content = f"""\
 # {image_name} 
-{description}
-*Stars*: {stars}
-*Forks*: {forks}
-*Last Updated*: {updated_at}
+{description}  
+*Stars*: {stars}  
+*Forks*: {forks}  
+*Last Updated*: {updated_at}  
 [Repo]({url})
 """
             typer.echo(content)
