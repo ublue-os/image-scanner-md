@@ -138,7 +138,6 @@ def scan(
         forks = repo_details["forks"]
         updated_at = arrow.get(repo_details["updated_at"])
 
-        print(image_name)
         if settings and len(settings["ignores"]) > 0:
             if image_name in settings["ignores"]:
                 continue
