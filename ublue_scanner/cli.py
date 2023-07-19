@@ -214,7 +214,7 @@ def scan(
                         f"""
                     === "{tag}"
                         ```sh
-                        rpm-ostree rebase ostree-unverified-registry:ghcr.io/{org}/{image_name}:{tag}
+                        rpm-ostree rebase ostree-image-signed:docker://:ghcr.io/{org}/{image_name}:{tag}
                         ```
                 """
                     ),
