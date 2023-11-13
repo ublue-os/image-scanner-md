@@ -77,9 +77,21 @@ class RegistryV2Image:
             follow_redirects=True,
         )
 
-    def tags(self):
-        resp = self.request(f"/{self.image}/tags/list")
-        return resp.json().get("tags", [])
+    def tags(self, last: str = None):
+        tags = []
+        tags_resp = True
+
+        while tags_resp:
+            query = f"/{self.image}/tags/list?n=5000"
+            if last:
+                query = f"{query}&last={last}"
+            resp = self.request(query)
+            tags_resp = resp.json().get("tags", [])
+            if tags_resp is None or len(tags_resp) == 0:
+                break
+            tags.extend(tags_resp)
+            last = tags[-1]
+        return tags
 
     def manifest(self, tag: str = "latest"):
         r = self.request(f"/{self.image}/manifests/{tag}")
